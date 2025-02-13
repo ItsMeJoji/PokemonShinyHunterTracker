@@ -1,2 +1,2 @@
 # PokemonShinyHunterTracker
-The Pokemon Shiny Hunter Trackers is a Python-based application to help streamers track their Pokemon Shiny Hunts.
+The Pokemon Shiny Hunter Trackers will be an application to help streamers track their Pokemon Shiny Hunts.
