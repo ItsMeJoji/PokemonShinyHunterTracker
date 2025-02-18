@@ -2,7 +2,7 @@ import sys
 import json
 import os
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QComboBox, QSpinBox, QDialog, QColorDialog, QInputDialog, QMessageBox
-from PyQt6.QtGui import QPixmap, QImage
+from PyQt6.QtGui import QPixmap, QImage, QMovie
 from PyQt6.QtCore import Qt
 
 class HuntTrackerApp(QMainWindow):
@@ -107,7 +107,7 @@ class HuntTrackerApp(QMainWindow):
     def open_hunt_window(self, hunt_name, hunt_count_var):
         index = self.pokemon_names.index(hunt_name)
         file = f"./PSH-Tracker/Images/Sprites/3D/{index}.gif"
-        image = QImage(file)
+        image = QMovie(file)
         bg_color = "#c0c0c0"
 
         hunt_window = QDialog(self)
@@ -119,15 +119,16 @@ class HuntTrackerApp(QMainWindow):
         hunt_name_label.move(10, 10)
 
         image_label = QLabel(hunt_window)
-        pixmap = QPixmap.fromImage(image)
-        image_label.setPixmap(pixmap)
+        movie = image
+        image_label.setMovie(movie)
+        movie.start()
         image_label.move(10, 50)
 
         hunt_count_label = QLabel(f"Count: {hunt_count_var.value()}", hunt_window)
         hunt_count_label.setStyleSheet(f"background-color: {bg_color};")
         hunt_count_label.move(10, 200)
 
-        hunt_window.exec_()
+        hunt_window.exec()
 
     def open_settings(self, hunt):
         settings_window = QDialog(self)
@@ -157,7 +158,7 @@ class HuntTrackerApp(QMainWindow):
         save_settings_button.move(10, 90)
         save_settings_button.clicked.connect(lambda: self.save_settings(hunt.settings.name, hunt.settings))
 
-        settings_window.exec_()
+        settings_window.exec()
 
     def load_settings(self):
         try:
