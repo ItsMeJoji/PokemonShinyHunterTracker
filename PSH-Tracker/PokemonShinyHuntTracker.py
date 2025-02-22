@@ -1,9 +1,11 @@
 import sys
 import json
 import os
+import keyboard
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QComboBox, QSpinBox, QDialog, QColorDialog, QInputDialog, QMessageBox
-from PyQt6.QtGui import QPixmap, QImage, QMovie
+from PyQt6.QtGui import QPixmap, QImage, QMovie, QKeySequence, QShortcut
 from PyQt6.QtCore import Qt
+from counter_handler import IncrementCount, DecrementCount
 
 class HuntTrackerApp(QMainWindow):
     def __init__(self):
@@ -35,6 +37,8 @@ class HuntTrackerApp(QMainWindow):
             hunt_frame = QWidget(self)
             hunt_layout = QVBoxLayout(hunt_frame)
 
+            #Hunt Info
+
             hunt_name_label = QLabel("Pokemon:", hunt_frame)
             hunt_layout.addWidget(hunt_name_label)
 
@@ -49,13 +53,25 @@ class HuntTrackerApp(QMainWindow):
             hunt_count.setValue(0)
             hunt_layout.addWidget(hunt_count)
 
+            # Increment and Decrement Buttons
+
             increment_button = QPushButton("+", hunt_frame)
-            increment_button.clicked.connect(lambda: hunt_count.setValue(hunt_count.value() + 1))
+            increment_button.clicked.connect(lambda: hunt_count.setValue(IncrementCount(hunt_count.value(), settings.increment)))
             hunt_layout.addWidget(increment_button)
 
             decrement_button = QPushButton("-", hunt_frame)
-            decrement_button.clicked.connect(lambda: hunt_count.setValue(hunt_count.value() - 1 if hunt_count.value() > 0 else 0))
+            decrement_button.clicked.connect(lambda: hunt_count.setValue(DecrementCount(hunt_count.value(), settings.increment) if hunt_count.value() > 0 else 0))
             hunt_layout.addWidget(decrement_button)
+
+            increment_shortcut = QShortcut(QKeySequence("+"), self)
+            increment_shortcut.activated.connect(lambda: hunt_count.setValue(IncrementCount(hunt_count.value(), settings.increment)))
+            increment_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+
+            decrement_shortcut = QShortcut(QKeySequence("-"), self)
+            decrement_shortcut.activated.connect(lambda: hunt_count.setValue(DecrementCount(hunt_count.value(), settings.increment) if hunt_count.value() > 0 else 0))
+            decrement_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+
+            # Phase Counter
 
             phase_count_label = QLabel("Phase:", hunt_frame)
             hunt_layout.addWidget(phase_count_label)
@@ -63,6 +79,8 @@ class HuntTrackerApp(QMainWindow):
             phase_count = QSpinBox(hunt_frame)
             phase_count.setValue(0)
             hunt_layout.addWidget(phase_count)
+
+            # Various Buttons
 
             secondary_window_button = QPushButton("Display", hunt_frame)
             secondary_window_button.clicked.connect(lambda: self.open_hunt_window(hunt_name_entry.currentText(), hunt_count))
@@ -77,7 +95,7 @@ class HuntTrackerApp(QMainWindow):
             hunt_layout.addWidget(phase_button)
 
             settings_button = QPushButton("Settings", hunt_frame)
-            settings_button.clicked.connect(lambda: self.open_settings(hunt))
+            settings_button.clicked.connect(lambda: self.open_settings(hunt, settings))
             hunt_layout.addWidget(settings_button)
 
             clear_button = QPushButton("Clear", hunt_frame)
@@ -130,32 +148,36 @@ class HuntTrackerApp(QMainWindow):
 
         hunt_window.exec()
 
-    def open_settings(self, hunt):
+    def open_settings(self, hunt, settings):
         settings_window = QDialog(self)
         settings_window.setWindowTitle(f"Hunt Settings: {hunt.name_entry.currentText()}")
 
         increment_label = QLabel("Increment:", settings_window)
         increment_label.move(10, 10)
 
-        increment_value = QLabel(str(hunt.settings.increment), settings_window)
+        increment_value = QLabel(str(settings.increment), settings_window)
         increment_value.move(100, 10)
 
         increment_button = QPushButton("Change Increment", settings_window)
         increment_button.move(200, 10)
-        increment_button.clicked.connect(lambda: self.change_increment(hunt))
+        increment_button.clicked.connect(lambda: self.change_increment(hunt, settings, increment_value))
 
         bg_color_label = QLabel("Background Color:", settings_window)
         bg_color_label.move(10, 50)
 
-        bg_color_value = QLabel(hunt.settings.color, settings_window)
+        bg_color_value = QLabel(settings.color, settings_window)
         bg_color_value.move(150, 50)
 
         bg_color_button = QPushButton("Change Color", settings_window)
         bg_color_button.move(250, 50)
         bg_color_button.clicked.connect(lambda: self.change_bg_color(hunt))
 
+        okay_button = QPushButton("Okay", settings_window)
+        okay_button.move(10,90)
+        okay_button.clicked.connect(settings_window.accept)
+
         save_settings_button = QPushButton("Save as Preset", settings_window)
-        save_settings_button.move(10, 90)
+        save_settings_button.move(150, 90)
         save_settings_button.clicked.connect(lambda: self.save_settings(hunt.settings.name, hunt.settings))
 
         settings_window.exec()
@@ -181,10 +203,11 @@ class HuntTrackerApp(QMainWindow):
             settings.name = name
             json.dump(self.settings, file, indent=4)
 
-    def change_increment(self, hunt):
+    def change_increment(self, hunt, settings, increment_label):
         increment_value, ok = QInputDialog.getInt(self, "Set Increment", f"Enter the increment value for {hunt.name_entry.currentText()}:", min=1, max=10)
         if ok:
-            hunt.settings.increment = increment_value
+            settings.increment = increment_value
+            increment_label.setText(str(increment_value))
 
     def change_bg_color(self, hunt):
         color_code = QColorDialog.getColor().name()
