@@ -1,7 +1,22 @@
 [
     {
+        "name": "test",
+        "color": "#aa5500",
+        "increment": 8
+    },
+    {
         "name": "default",
-        "color": "#c0c0c0",
+        "color": "#ff55ff",
         "increment": 1
+    },
+    {
+        "name": "asdf",
+        "color": "#ff55ff",
+        "increment": 1
+    },
+    {
+        "name": "qwerty",
+        "color": "#ff0000",
+        "increment": 6
     }
 ]
